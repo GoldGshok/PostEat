@@ -45,9 +45,10 @@ private:
     QTableWidget *createTableMaterials();
     QTableWidget *createTableTime();
 
-    int f(int step);
+    int *f(int step);
+    int *fn(int step);
     int P(int x);
-    int phi(int y);
+    int Phi(int y);
     int min(int d, int m){ return !(d < m) ? d : m; }
 
 private slots:

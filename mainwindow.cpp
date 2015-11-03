@@ -60,17 +60,19 @@ QTableWidget *MainWindow::createTableTime()
     return tableTime;
 }
 
-int MainWindow::f(int step)
+int *MainWindow::f(int step)
 {
+
     int lstep = t - step;
     int min = 0;
-    while (lstep != 0){
+    for (int i = lstep; i < t; i++){
         min += d[lstep];
-        lstep--;
     }
-    min = min(d[t-step],M);
+    min = min(min,M);
 
     int count = min / delta;
+
+    int *func = new int[count];
 
     int **table = new int*[count + 1];
     for (int i = 0; i < count + 1; i++){
@@ -84,17 +86,63 @@ int MainWindow::f(int step)
 
     for (int i = 1; i < count + 1; i++){
         for (int j = 1; j < count + 1; j++){
-            if (table[i][0] + table[0][j] - d[t-step] < 0)
+            if (table[i][0] + table[0][j] - d[lstep] < 0)
                 table[i][j] = -1;
             else{
-                table[i][j] = P(x) + phi(d[t-step]/2 +
-                                         (table[i][0] + table[0][j] - d[t-step]));
+                table[i][j] = P(x) + Phi(d[lstep]/2 +
+                                         (table[i][0] + table[0][j] - d[lstep]));
                         /*+ f(table[i][0] + table[0][j] - d[step]))*/
             }
         }
     }
 
+    return func;
+}
 
+int *MainWindow::fn(int step)
+{
+    int lstep = t - step;
+    int min = 0;
+    for (int i = lstep; i < t; i++){
+        min += d[lstep];
+    }
+    min = min(min,M);
+
+    int count = min / delta;
+
+    int *func = new int[count];
+
+    int **table = new int*[count];
+    for (int i = 0; i < count; i++){
+        table[i] = new int[count];
+    }
+
+    for (int i = 0; i < count; i++){
+        table[i][1] = d[lstep] - i * delta;
+        table[i][0] = i * delta;
+    }
+
+
+}
+
+int MainWindow::P(int x)
+{
+    for (int i = 0; i < countInventory; i++){
+        if (this->x[i] == x)
+        {
+            return Px[i];
+        }
+    }
+}
+
+int MainWindow::Phi(int y)
+{
+    for (int i = 0; i < countMaterials; i++){
+        if (this->y[i] == y)
+        {
+            return Phy[i];
+        }
+    }
 }
 
 void MainWindow::btnWritePress()
