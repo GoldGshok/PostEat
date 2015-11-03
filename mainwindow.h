@@ -5,6 +5,7 @@
 #include <QMessageBox>
 #include <QTableWidget>
 #include <QLayout>
+#include <QSizePolicy>
 
 namespace Ui {
 class MainWindow;
@@ -17,6 +18,10 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+
+    QTableWidget *inventory;
+    QTableWidget *materials;
+    QTableWidget *time;
 
 private:
     Ui::MainWindow *ui;
@@ -36,13 +41,19 @@ private:
     int delta = 0;
     int beginMaterials = 0;
 
-    void createTableInventory();
-    void createTableMaterials();
-    void createTableTime();
+    QTableWidget *createTableInventory();
+    QTableWidget *createTableMaterials();
+    QTableWidget *createTableTime();
+
+    int f(int step);
+    int P(int x);
+    int phi(int y);
+    int min(int d, int m){ return !(d < m) ? d : m; }
 
 private slots:
     void btnWritePress();
     void checkBeginMaterials();
+    void addTableValues();
 };
 
 #endif // MAINWINDOW_H

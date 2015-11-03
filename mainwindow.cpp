@@ -16,7 +16,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::createTableInventory()
+QTableWidget *MainWindow::createTableInventory()
 {
     QTableWidget *tableInventory = new QTableWidget(2,countInventory,this);
 
@@ -26,9 +26,74 @@ void MainWindow::createTableInventory()
 
     tableInventory->setVerticalHeaderLabels(verticalHeader);
 
+    return tableInventory;
+}
 
-    //how it display in position
-    ui->verticalLayout->addWidget(tableInventory);
+QTableWidget *MainWindow::createTableMaterials()
+{
+    QTableWidget *tableMaterials = new QTableWidget(2,countMaterials,this);
+
+    QStringList verticalHeader;
+    verticalHeader.append("y");
+    verticalHeader.append("Phi(y)");
+
+    tableMaterials->setVerticalHeaderLabels(verticalHeader);
+
+    return tableMaterials;
+}
+
+QTableWidget *MainWindow::createTableTime()
+{
+    QTableWidget *tableTime = new QTableWidget(1,t,this);
+
+    QStringList verticalHeader;
+    verticalHeader.append("t");
+
+    QStringList horizontalHeader;
+    for (int i = t; i >= 1; i--){
+        horizontalHeader.append('d' + QString::number(i));
+    }
+
+    tableTime->setVerticalHeaderLabels(verticalHeader);
+    tableTime->setHorizontalHeaderLabels(horizontalHeader);
+
+    return tableTime;
+}
+
+int MainWindow::f(int step)
+{
+    int lstep = t - step;
+    int min = 0;
+    while (lstep != 0){
+        min += d[lstep];
+        lstep--;
+    }
+    min = min(d[t-step],M);
+
+    int count = min / delta;
+
+    int **table = new int*[count + 1];
+    for (int i = 0; i < count + 1; i++){
+        table[i] = new int[count + 1];
+    }
+
+    for (int i = 0; i < count; i++){
+        table[0][i+1] = i * delta;
+        table[i+1][0] = i * delta;
+    }
+
+    for (int i = 1; i < count + 1; i++){
+        for (int j = 1; j < count + 1; j++){
+            if (table[i][0] + table[0][j] - d[t-step] < 0)
+                table[i][j] = -1;
+            else{
+                table[i][j] = P(x) + phi(d[t-step]/2 +
+                                         (table[i][0] + table[0][j] - d[t-step]));
+                        /*+ f(table[i][0] + table[0][j] - d[step]))*/
+            }
+        }
+    }
+
 
 }
 
@@ -97,12 +162,37 @@ void MainWindow::btnWritePress()
             msgBox.deleteLater();
         }
 
-
-
     if (t * countMaterials * countInventory != 0){
-        createTableInventory();
-        //createTableMaterials();
-        //createTableTime();
+        QDialog *d = new QDialog();
+
+        QSizePolicy sizePolicy;
+
+        sizePolicy.setVerticalPolicy(QSizePolicy::Fixed);
+        sizePolicy.setHorizontalPolicy(QSizePolicy::Fixed);
+
+        d->setSizePolicy(sizePolicy);
+
+        d->setGeometry(100, 100, 800, 600);
+
+        QVBoxLayout *l = new QVBoxLayout();
+        d->setLayout(l);
+
+        QPushButton *btn = new QPushButton();
+        btn->setText("OK");
+
+        connect(btn,SIGNAL(pressed()),SLOT(addTableValues()));
+        connect(btn,SIGNAL(released()),d,SLOT(deleteLater()));
+
+        inventory = createTableInventory();
+        materials = createTableMaterials();
+        time = createTableTime();
+
+        l->addWidget(inventory);
+        l->addWidget(materials);
+        l->addWidget(time);
+        l->addWidget(btn);
+
+        d->exec();
     }
 }
 
@@ -114,5 +204,22 @@ void MainWindow::checkBeginMaterials()
     }else{
         ui->labelBeginMaterials->setEnabled(false);
         ui->edtBeginMaterials->setEnabled(false);
+    }
+}
+
+void MainWindow::addTableValues()
+{
+    for (int i = 0; i < inventory->columnCount(); i++){
+        x[i] = inventory->item(0,i)->text().toInt();
+        Px[i] = inventory->item(1,i)->text().toInt();
+    }
+
+    for (int i = 0; i < materials->columnCount(); i++){
+        y[i] = materials->item(0,i)->text().toInt();
+        Phy[i] = materials->item(1,i)->text().toInt();
+    }
+
+    for (int i = 0; i < time->columnCount(); i++){
+        d[i] = time->item(0,i)->text().toInt();
     }
 }
