@@ -29,7 +29,7 @@
         <item>
          <widget class="QLineEdit" name="edtInventory">
           <property name="text">
-           <string>10</string>
+           <string>4</string>
           </property>
          </widget>
         </item>
@@ -47,7 +47,7 @@
         <item>
          <widget class="QLineEdit" name="edtMaterials">
           <property name="text">
-           <string>10</string>
+           <string>5</string>
           </property>
          </widget>
         </item>
@@ -65,7 +65,7 @@
         <item>
          <widget class="QLineEdit" name="edtT">
           <property name="text">
-           <string>4</string>
+           <string>2</string>
           </property>
          </widget>
         </item>

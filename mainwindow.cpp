@@ -60,69 +60,89 @@ QTableWidget *MainWindow::createTableTime()
     return tableTime;
 }
 
-int *MainWindow::f(int step)
-{
-
-    int lstep = t - step;
-    int min = 0;
-    for (int i = lstep; i < t; i++){
-        min += d[lstep];
-    }
-    min = min(min,M);
-
-    int count = min / delta;
-
-    int *func = new int[count];
-
-    int **table = new int*[count + 1];
-    for (int i = 0; i < count + 1; i++){
-        table[i] = new int[count + 1];
-    }
-
-    for (int i = 0; i < count; i++){
-        table[0][i+1] = i * delta;
-        table[i+1][0] = i * delta;
-    }
-
-    for (int i = 1; i < count + 1; i++){
-        for (int j = 1; j < count + 1; j++){
-            if (table[i][0] + table[0][j] - d[lstep] < 0)
-                table[i][j] = -1;
-            else{
-                table[i][j] = P(x) + Phi(d[lstep]/2 +
-                                         (table[i][0] + table[0][j] - d[lstep]));
-                        /*+ f(table[i][0] + table[0][j] - d[step]))*/
-            }
-        }
-    }
-
-    return func;
-}
-
-int *MainWindow::fn(int step)
+std::vector<int> MainWindow::f(int step)
 {
     int lstep = t - step;
-    int min = 0;
+    int minf = 0;
     for (int i = lstep; i < t; i++){
-        min += d[lstep];
+        minf += d[i];
     }
-    min = min(min,M);
+    minf = min(minf,M);
 
-    int count = min / delta;
+    int count = minf / delta + 2;
 
-    int *func = new int[count];
+    std::vector<int> func;
+    std::vector<int> fb;
+    if (step == 2){
+        fb = this->fn();
+    }else{
+        fb = f(step-1);
+    }
 
     int **table = new int*[count];
     for (int i = 0; i < count; i++){
         table[i] = new int[count];
     }
 
-    for (int i = 0; i < count; i++){
+    for (int i = 0; i < count-1; i++){
+        table[0][i+1] = i * delta;
+        table[i+1][0] = i * delta;
+    }
+
+
+    for (int i = 1; i < count; i++){
+        int k = fb.size() - 1;
+        for (int j = count - 1; j > 0; j--){
+            if (table[i][0] + table[0][j] - d[lstep] < 0)
+                table[i][j] = 9999999;
+            else
+            if (table[i][0] + table[0][j] > minf){
+                table[i][j] = 9999999;
+            }else{
+                table[i][j] = P(table[0][j]) +
+                        Phi(d[lstep]/2 + (table[i][0] + table[0][j] - d[lstep])) + fb[k];
+                k--;
+            }
+
+        }
+    }
+
+    for (int i = 1; i < count; i++){
+        int minJ = table[i][1];
+        for (int j = 1; j < count; j++){
+            minJ = min(minJ,table[i][j]);
+        }
+        func.push_back(minJ);
+    }
+
+    return func;
+}
+
+std::vector<int> MainWindow::fn()
+{
+    int lstep = t - 1;
+
+    int minf = min(d[lstep],M);
+
+    int count = minf / delta;
+
+    std::vector<int> func;
+
+    int **table = new int*[count+1];
+    for (int i = 0; i < count+1; i++){
+        table[i] = new int[count+1];
+    }
+
+    for (int i = 0; i < count+1; i++){
         table[i][1] = d[lstep] - i * delta;
         table[i][0] = i * delta;
     }
 
+    for (int i = 0; i < count+1; i++){
+        func.push_back(P(table[i][1]) + Phi(d[lstep]/2));
+    }
 
+    return func;
 }
 
 int MainWindow::P(int x)
@@ -230,6 +250,7 @@ void MainWindow::btnWritePress()
 
         connect(btn,SIGNAL(pressed()),SLOT(addTableValues()));
         connect(btn,SIGNAL(released()),d,SLOT(deleteLater()));
+        connect(btn,SIGNAL(released()),SLOT(reshenie()));
 
         inventory = createTableInventory();
         materials = createTableMaterials();
@@ -269,5 +290,14 @@ void MainWindow::addTableValues()
 
     for (int i = 0; i < time->columnCount(); i++){
         d[i] = time->item(0,i)->text().toInt();
+    }
+}
+
+void MainWindow::reshenie()
+{
+    std::vector<int> rez;
+    rez = f(t);
+    for (int i = 0; i < rez.size() - 1; i++){
+        qDebug() << rez[i] << " ";
     }
 }

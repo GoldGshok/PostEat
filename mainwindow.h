@@ -6,10 +6,14 @@
 #include <QTableWidget>
 #include <QLayout>
 #include <QSizePolicy>
+#include <vector>
+#include <QDebug>
 
 namespace Ui {
 class MainWindow;
 }
+
+//using namespace std;
 
 class MainWindow : public QMainWindow
 {
@@ -45,16 +49,17 @@ private:
     QTableWidget *createTableMaterials();
     QTableWidget *createTableTime();
 
-    int *f(int step);
-    int *fn(int step);
+    std::vector<int> f(int step);
+    std::vector<int> fn();
     int P(int x);
     int Phi(int y);
-    int min(int d, int m){ return !(d < m) ? d : m; }
+    int min(int a, int b){ return (a < b) ? a : b; }
 
 private slots:
     void btnWritePress();
     void checkBeginMaterials();
     void addTableValues();
+    void reshenie();
 };
 
 #endif // MAINWINDOW_H
