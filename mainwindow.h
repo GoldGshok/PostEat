@@ -8,6 +8,11 @@
 #include <QSizePolicy>
 #include <vector>
 #include <QDebug>
+#include <QFile>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QJsonValue>
 
 namespace Ui {
 class MainWindow;
@@ -60,6 +65,7 @@ private slots:
     void checkBeginMaterials();
     void addTableValues();
     void reshenie();
+    void readJSON();
 };
 
 #endif // MAINWINDOW_H

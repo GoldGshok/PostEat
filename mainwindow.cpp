@@ -9,6 +9,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->btnWrite,SIGNAL(pressed()),SLOT(btnWritePress()));
     connect(ui->checkBeginMaterials,SIGNAL(pressed()),SLOT(checkBeginMaterials()));
+    connect(ui->readFile,SIGNAL(triggered(bool)),SLOT(readJSON()));
 }
 
 MainWindow::~MainWindow()
@@ -79,33 +80,37 @@ std::vector<int> MainWindow::f(int step)
         fb = f(step-1);
     }
 
-    int **table = new int*[count];
-    for (int i = 0; i < count; i++){
-        table[i] = new int[count];
+    int **table = new int*[count+1];
+    for (int i = 0; i < count+1; i++){
+        table[i] = new int[count+1];
     }
 
-    for (int i = 0; i < count-1; i++){
+    for (int i = 0; i < count; i++){
         table[0][i+1] = i * delta;
         table[i+1][0] = i * delta;
     }
 
-
     for (int i = 1; i < count; i++){
-        int k = fb.size() - 1;
-        for (int j = count - 1; j > 0; j--){
-            if (table[i][0] + table[0][j] - d[lstep] < 0)
-                table[i][j] = 9999999;
+        for (int j = 1; j < count; j++){
+            if (table[j][0] + table[0][i] - d[lstep] < 0)
+                table[j][i] = 9999999;
             else
-            if (table[i][0] + table[0][j] > minf){
-                table[i][j] = 9999999;
+            if (table[j][0] + table[0][i] > minf){
+                table[j][i] = 9999999;
             }else{
-                table[i][j] = P(table[0][j]) +
-                        Phi(d[lstep]/2 + (table[i][0] + table[0][j] - d[lstep])) + fb[k];
-                k--;
+                table[j][i] = P(table[0][i]) +
+                        Phi(d[lstep]/2 + (table[j][0] + table[0][i] - d[lstep])) +
+                        fb[(table[j][0] + table[0][i] - d[lstep]) / delta];
             }
 
         }
     }
+
+    /*for (int i = 0; i < count; i++){
+        for (int j = 0; j < count; j++){
+            qDebug() << table[i][j] << " ";
+        }
+    }*/
 
     for (int i = 1; i < count; i++){
         int minJ = table[i][1];
@@ -297,7 +302,60 @@ void MainWindow::reshenie()
 {
     std::vector<int> rez;
     rez = f(t);
-    for (int i = 0; i < rez.size() - 1; i++){
+    for (int i = 0; i < rez.size(); i++){
         qDebug() << rez[i] << " ";
+    }
+}
+
+void MainWindow::readJSON()
+{
+    QString settings;
+    QFile file;
+    file.setFileName("input.json");
+    if(file.open(QIODevice::ReadOnly | QIODevice::Text)){
+        settings = file.readAll();
+    }
+    file.close();
+
+    QJsonDocument document = QJsonDocument::fromJson(settings.toUtf8());
+    qWarning() << document.isNull(); // <- print false :)
+    QJsonObject object = document.object();
+
+    countInventory = object.value(QString("Inventory")).toInt();
+    countMaterials = object.value(QString("Materials")).toInt();
+    t = object.value(QString("Month")).toInt();
+    delta = object.value(QString("Delta")).toInt();
+    M = object.value(QString("SizeM")).toInt();
+    beginMaterials = object.value(QString("BMaterials")).toInt();
+
+    //таблица инвентаря
+    x = new int[countInventory];
+    Px = new int[countInventory];
+
+    //таблица материалов
+    y = new int[countMaterials];
+    Phy = new int[countMaterials];
+
+    //месяца
+    d = new int[t];
+
+    QJsonArray X = object.value(QString("X")).toArray();
+    QJsonArray PX = object.value(QString("Px")).toArray();
+    QJsonArray Y = object.value(QString("Y")).toArray();
+    QJsonArray PHY = object.value(QString("Phy")).toArray();
+    QJsonArray D = object.value(QString("D")).toArray();
+
+    for (int i = 0; i < countInventory; i++){
+        x[i] = X[i].toInt();
+        Px[i] = PX[i].toInt();
+    }
+
+    for (int i = 0; i < countMaterials; i++){
+        y[i] = Y[i].toInt();
+        Phy[i] = PHY[i].toInt();
+    }
+
+    for (int i = 0; i < t; i++){
+        d[i] = D[i].toInt();
     }
 }
