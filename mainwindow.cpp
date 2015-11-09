@@ -318,15 +318,16 @@ void MainWindow::readJSON()
     file.close();
 
     QJsonDocument document = QJsonDocument::fromJson(settings.toUtf8());
-    qWarning() << document.isNull(); // <- print false :)
+    qDebug() << document.isNull();
     QJsonObject object = document.object();
 
-    countInventory = object.value(QString("Inventory")).toInt();
-    countMaterials = object.value(QString("Materials")).toInt();
-    t = object.value(QString("Month")).toInt();
-    delta = object.value(QString("Delta")).toInt();
-    M = object.value(QString("SizeM")).toInt();
-    beginMaterials = object.value(QString("BMaterials")).toInt();
+    countInventory = object["Inventory"].toString().toInt();
+    qWarning() << countInventory;
+    countMaterials = object["Materials"].toString().toInt();
+    t = object["Month"].toString().toInt();
+    delta = object["Delta"].toString().toInt();
+    M = object["SizeM"].toString().toInt();
+    beginMaterials = object["BMaterials"].toString().toInt();
 
     //таблица инвентаря
     x = new int[countInventory];
@@ -346,16 +347,16 @@ void MainWindow::readJSON()
     QJsonArray D = object.value(QString("D")).toArray();
 
     for (int i = 0; i < countInventory; i++){
-        x[i] = X[i].toInt();
-        Px[i] = PX[i].toInt();
+        x[i] = X[i].toString().toInt();
+        Px[i] = PX[i].toString().toInt();
     }
 
     for (int i = 0; i < countMaterials; i++){
-        y[i] = Y[i].toInt();
-        Phy[i] = PHY[i].toInt();
+        y[i] = Y[i].toString().toInt();
+        Phy[i] = PHY[i].toString().toInt();
     }
 
     for (int i = 0; i < t; i++){
-        d[i] = D[i].toInt();
+        d[i] = D[i].toString().toInt();
     }
 }
