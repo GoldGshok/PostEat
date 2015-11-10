@@ -18,7 +18,10 @@ namespace Ui {
 class MainWindow;
 }
 
-//using namespace std;
+struct memory{
+    std::vector<int> xt;
+    std::vector<int> ft;
+};
 
 class MainWindow : public QMainWindow
 {
@@ -31,6 +34,10 @@ public:
     QTableWidget *inventory;
     QTableWidget *materials;
     QTableWidget *time;
+
+    void htmlFn(int **mas, std::vector<int> f, std::vector<int> x, int count);
+    void htmlF(int **mas, std::vector<int> f, std::vector<int> x, int count, int step);
+    void htmlResult(int **mas, int fmin);
 
 private:
     Ui::MainWindow *ui;
@@ -49,6 +56,8 @@ private:
     int M = 0;
     int delta = 0;
     int beginMaterials = 0;
+
+    std::vector<memory> Output; //для хранения всех f(x), x(y)
 
     QTableWidget *createTableInventory();
     QTableWidget *createTableMaterials();
