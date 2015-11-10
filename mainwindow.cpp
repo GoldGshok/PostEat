@@ -11,6 +11,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->btnWrite,SIGNAL(pressed()),SLOT(btnWritePress()));
     connect(ui->checkBeginMaterials,SIGNAL(pressed()),SLOT(checkBeginMaterials()));
     connect(ui->readFile,SIGNAL(triggered(bool)),SLOT(readJSON()));
+
 }
 
 MainWindow::~MainWindow()
@@ -87,6 +88,41 @@ void MainWindow::htmlF(int **table, std::vector<int> f, std::vector<int> x, int 
             out << QString("<td>").toUtf8() << f[i-1] << QString("</td>").toUtf8();
             out << QString("</tr>").toUtf8() << QString("\n").toUtf8();
         }
+        out << QString("</table>").toUtf8() << QString("\n").toUtf8();
+    }
+    file.close();
+}
+
+void MainWindow::htmlFbm(int **table, std::vector<int> f, std::vector<int> x, int count, int step)
+{
+    //записываем вывод остальных таблиц в наглядной форме
+    QFile file("output.html");
+    if (!file.open(QIODevice::Text | QIODevice::Append)){
+
+    }else{
+        QTextStream out(&file);
+
+        out << QString("<table border=1 align=center>").toUtf8()
+            << QString("\n").toUtf8();
+        out << QString("<caption>Таблица результатов</caption>").toUtf8();
+        out << QString("<tr>"
+                    "<th>y/x</th>").toUtf8();
+        for (int i = 1; i < count; i++){
+            out << QString("<th>").toUtf8() << table[0][i] << QString("</th>").toUtf8();
+        }
+
+        out << QString("<th>x(y)</th>"
+                        "<th>f_").toUtf8() << step << QString("(y)</th>"
+                        "</tr>").toUtf8() << QString("\n").toUtf8();
+
+        out << QString("<tr>").toUtf8() << QString("\n").toUtf8();
+        for (int j = 0; j < count; j++){
+            out << QString("<td>").toUtf8() << table[beginMaterials / delta + 1][j]
+                       << QString("</td>").toUtf8();
+        }
+        out << QString("<td>").toUtf8() << x[0] << QString("</td>").toUtf8();
+        out << QString("<td>").toUtf8() << f[0] << QString("</td>").toUtf8();
+        out << QString("</tr>").toUtf8() << QString("\n").toUtf8();
         out << QString("</table>").toUtf8() << QString("\n").toUtf8();
     }
     file.close();
@@ -206,15 +242,18 @@ std::vector<int> MainWindow::f(int step)
 
     int count = minf / delta + 2;
 
-    //std::vector<int> func;
-    //std::vector<int> x_y;
     memory memoryTemp;
 
     std::vector<int> fb;
+
     if (step == 2){
         fb = this->fn();
     }else{
         fb = f(step-1);
+    }
+
+    if (beginMaterials == 0 && step != t){
+        //если нет начальных запасов
     }
 
     int **table = new int*[count+1];
@@ -236,28 +275,64 @@ std::vector<int> MainWindow::f(int step)
                 table[j][i] = 9999999;
             }else{
                 table[j][i] = P(table[0][i]) +
-                        Phi(d[lstep]/2 + (table[j][0] + table[0][i] - d[lstep])) +
-                        fb[(table[j][0] + table[0][i] - d[lstep]) / delta];
+                    Phi(d[lstep]/2 + (table[j][0] + table[0][i] - d[lstep])) +
+                    fb[(table[j][0] + table[0][i] - d[lstep]) / delta];
             }
-
         }
     }
 
-    for (int i = 1; i < count; i++){
-        int minJ = table[i][1];
-        int tempX = table[0][1];
-        for (int j = 1; j < count; j++){
-            if (minJ > table[i][j]){
-                minJ = table[i][j];
-                tempX = table[0][j];
+    if (beginMaterials != 0){
+        if (step != t){
+            for (int i = 1; i < count; i++){
+                int minF = table[i][1];
+                int tempX = table[0][1];
+                for (int j = 1; j < count; j++){
+                    if (minF > table[i][j]){
+                        minF = table[i][j];
+                        tempX = table[0][j];
+                    }
+                }
+                memoryTemp.xt.push_back(tempX);
+                memoryTemp.ft.push_back(minF);
             }
+        }else{
+            int minF = table[beginMaterials / delta + 1][1];
+            int tempX = table[0][1];
+            for (int j = 1; j < count; j++){
+                if (minF > table[beginMaterials / delta + 1][j]){
+                    minF = table[beginMaterials / delta + 1][j];
+                    tempX = table[0][j];
+                }
+            }
+            memoryTemp.xt.push_back(tempX);
+            memoryTemp.ft.push_back(minF);
         }
-        memoryTemp.xt.push_back(tempX);
-        memoryTemp.ft.push_back(minJ);
+    }else{
+        for (int i = 1; i < count; i++){
+            int minF = table[i][1];
+            int tempX = table[0][1];
+            for (int j = 1; j < count; j++){
+                if (minF > table[i][j]){
+                    minF = table[i][j];
+                    tempX = table[0][j];
+                }
+            }
+            memoryTemp.xt.push_back(tempX);
+            memoryTemp.ft.push_back(minF);
+        }
     }
 
     Output.push_back(memoryTemp);
-    htmlF(table,memoryTemp.ft,memoryTemp.xt,count,lstep);
+
+    if (beginMaterials == 0){
+        htmlF(table,memoryTemp.ft,memoryTemp.xt,count,step);
+    }else{
+        if (step != t){
+            htmlF(table,memoryTemp.ft,memoryTemp.xt,count,step);
+        }else{
+            htmlFbm(table,memoryTemp.ft,memoryTemp.xt,count,step);
+        }
+    }
 
     return memoryTemp.ft;
 }
@@ -271,7 +346,6 @@ std::vector<int> MainWindow::fn()
 
     int count = minf / delta;
 
-    //std::vector<int> func;
     memory memoryTemp;
 
     int **table = new int*[count+1];
@@ -405,6 +479,7 @@ void MainWindow::btnWritePress()
         connect(btn,SIGNAL(pressed()),SLOT(addTableValues()));
         connect(btn,SIGNAL(released()),d,SLOT(deleteLater()));
         connect(btn,SIGNAL(released()),SLOT(reshenie()));
+        connect(btn,SIGNAL(released()),SLOT(viewHTML()));
 
         inventory = createTableInventory();
         materials = createTableMaterials();
@@ -452,7 +527,8 @@ void MainWindow::addTableValues()
 void MainWindow::reshenie()
 {
     //решаем задачу
-    //std::vector<int> rez;
+    Output.clear();
+
     f(t);
 
     int **table = new int*[t];
@@ -461,14 +537,19 @@ void MainWindow::reshenie()
     }
 
     int index = 0;
-    for (int i = 1; i < Output[Output.size()-1].ft.size(); i++){
+    for (int i = 0; i < Output[Output.size()-1].ft.size(); i++){
         if (Output[Output.size()-1].ft[index] > Output[Output.size()-1].ft[i]){
             index = i;
         }
     }
 
-    table[0][0] = Output[Output.size()-1].xt[index];
-    table[1][0] = index * delta;
+    if (beginMaterials == 0){
+        table[0][0] = Output[Output.size()-1].xt[index];
+        table[1][0] = index * delta;
+    }else{
+        table[0][0] = Output[Output.size()-1].xt[index];
+        table[1][0] = beginMaterials;
+    }
     table[2][0] = table[0][0] + table[1][0];
     table[3][0] = table[2][0] - d[0];
     for (int i = 1; i < t; i++){
@@ -540,12 +621,45 @@ void MainWindow::readJSON()
 
         QMessageBox msgBox;
         QPushButton *ok = msgBox.addButton(tr("OK"),QMessageBox::ActionRole);
+
         connect(ok,SIGNAL(pressed()),SLOT(reshenie()));
+        connect(ok,SIGNAL(released()),SLOT(viewHTML()));
+
         msgBox.setText("Reading complete!");
         msgBox.exec();
+
     }else{
         QMessageBox msgBox;
         msgBox.setText("Reading failed!");
         msgBox.exec();
     }
+}
+
+void MainWindow::viewHTML()
+{
+    QDialog *d = new QDialog();
+
+    QSizePolicy sizePolicy;
+
+    sizePolicy.setVerticalPolicy(QSizePolicy::Fixed);
+    sizePolicy.setHorizontalPolicy(QSizePolicy::Fixed);
+
+    d->setSizePolicy(sizePolicy);
+
+    d->setGeometry(100, 100, 800, 600);
+
+    QVBoxLayout *l = new QVBoxLayout();
+    d->setLayout(l);
+
+    QWebView *view = new QWebView(d);
+    QUrl url("file:///" + QDir::currentPath() + "/output.html");
+
+    view->load(url);
+    view->show();
+
+    l->addWidget(view);
+
+    d->exec();
+
+    d->deleteLater();
 }

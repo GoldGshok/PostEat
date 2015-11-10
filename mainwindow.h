@@ -13,6 +13,8 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonValue>
+#include <QWebView>
+#include <QDir>
 
 namespace Ui {
 class MainWindow;
@@ -37,6 +39,7 @@ public:
 
     void htmlFn(int **mas, std::vector<int> f, std::vector<int> x, int count);
     void htmlF(int **mas, std::vector<int> f, std::vector<int> x, int count, int step);
+    void htmlFbm(int **mas, std::vector<int> f, std::vector<int> x, int count, int step);
     void htmlResult(int **mas, int fmin);
 
 private:
@@ -75,6 +78,7 @@ private slots:
     void addTableValues();
     void reshenie();
     void readJSON();
+    void viewHTML();
 };
 
 #endif // MAINWINDOW_H
