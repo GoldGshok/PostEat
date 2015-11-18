@@ -36,6 +36,7 @@ public:
     QTableWidget *inventory;
     QTableWidget *materials;
     QTableWidget *time;
+    const int MAX = 999999;
 
     void htmlFn(int **mas, std::vector<int> f, std::vector<int> x, int count);
     void htmlF(int **mas, std::vector<int> f, std::vector<int> x, int count, int step);

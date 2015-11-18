@@ -81,8 +81,12 @@ void MainWindow::htmlF(int **table, std::vector<int> f, std::vector<int> x, int 
         for (int i = 1; i < count; i++){
             out << QString("<tr>").toUtf8() << QString("\n").toUtf8();
             for (int j = 0; j < count; j++){
-                out << QString("<td>").toUtf8() << table[i][j]
-                       << QString("</td>").toUtf8();
+                if (table[i][j] != MAX){
+                    out << QString("<td>").toUtf8() << table[i][j]
+                        << QString("</td>").toUtf8();
+                }else{
+                    out << QString("<td><center>-</center></td>").toUtf8();
+                }
             }
             out << QString("<td>").toUtf8() << x[i-1] << QString("</td>").toUtf8();
             out << QString("<td>").toUtf8() << f[i-1] << QString("</td>").toUtf8();
@@ -95,7 +99,7 @@ void MainWindow::htmlF(int **table, std::vector<int> f, std::vector<int> x, int 
 
 void MainWindow::htmlFbm(int **table, std::vector<int> f, std::vector<int> x, int count, int step)
 {
-    //записываем вывод остальных таблиц в наглядной форме
+    //записываем вывод последней таблицы если есть начальный запас
     QFile file("output.html");
     if (!file.open(QIODevice::Text | QIODevice::Append)){
 
@@ -117,8 +121,12 @@ void MainWindow::htmlFbm(int **table, std::vector<int> f, std::vector<int> x, in
 
         out << QString("<tr>").toUtf8() << QString("\n").toUtf8();
         for (int j = 0; j < count; j++){
-            out << QString("<td>").toUtf8() << table[beginMaterials / delta + 1][j]
+            if (table[beginMaterials / delta + 1][j] != MAX){
+                out << QString("<td>").toUtf8() << table[beginMaterials / delta + 1][j]
                        << QString("</td>").toUtf8();
+            }else{
+                out << QString("<td><center>-</center></td>").toUtf8();
+            }
         }
         out << QString("<td>").toUtf8() << x[0] << QString("</td>").toUtf8();
         out << QString("<td>").toUtf8() << f[0] << QString("</td>").toUtf8();
@@ -137,6 +145,12 @@ void MainWindow::htmlResult(int **mas, int fmin)
     }else{
         QTextStream out(&file);
 
+        QString st[4];
+        st[0] = "x";
+        st[1] = "y";
+        st[2] = "x + y";
+        st[3] = "x + y - dn";
+
         out << QString("<table border=1 align=center>").toUtf8()
             << QString("\n").toUtf8();
         out << QString("<caption>Ответ</caption>").toUtf8();
@@ -150,7 +164,7 @@ void MainWindow::htmlResult(int **mas, int fmin)
         for (int i = 0; i < 4; i++){
             out << QString("<tr>").toUtf8() << QString("\n").toUtf8();
 
-            out << QString("<td>").toUtf8() << i << QString("</td>").toUtf8();
+            out << QString("<td><center>").toUtf8() << st[i] << QString("</center></td>").toUtf8();
             for (int j = 0; j < t; j++){
                 out << QString("<td>").toUtf8() << mas[i][j]
                        << QString("</td>").toUtf8();
@@ -269,10 +283,10 @@ std::vector<int> MainWindow::f(int step)
     for (int i = 1; i < count; i++){
         for (int j = 1; j < count; j++){
             if (table[j][0] + table[0][i] - d[lstep] < 0)
-                table[j][i] = 9999999;
+                table[j][i] = MAX;
             else
             if (table[j][0] + table[0][i] > minf){
-                table[j][i] = 9999999;
+                table[j][i] = MAX;
             }else{
                 table[j][i] = P(table[0][i]) +
                     Phi(d[lstep]/2 + (table[j][0] + table[0][i] - d[lstep])) +
